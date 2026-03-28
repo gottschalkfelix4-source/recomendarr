@@ -1,0 +1,55 @@
+# Ignore node_modules and build artifacts
+node_modules/
+dist/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyo
+*.pyd
+.Python
+
+# Ignore virtual environments
+venv/
+env/
+.venv/
+
+# Ignore environment files (no longer needed)
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test files
+tests/
+test_*
+*_test.py
+
+# Coverage
+coverage/
+htmlcov/
+
+# Data directory (can be uncommented if you want to track database)
+# data/
+data/
+.env
+*.db

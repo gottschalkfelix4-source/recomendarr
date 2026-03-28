@@ -1,0 +1,47 @@
+# Ignore node_modules (we build it fresh in Docker)
+**/node_modules/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyo
+*.pyd
+.Python
+
+# Ignore virtual environments
+venv/
+env/
+.venv/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test files
+tests/
+test_*
+*_test.py
+
+# Coverage
+coverage/
+htmlcov/
+
+# Data directory - uncomment if you want to track the database
+# data/
