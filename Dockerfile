@@ -12,9 +12,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Create non-root user
-RUN adduser --disabled-password --home /app appuser
-
 # Install backend dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -26,12 +23,7 @@ COPY backend/. ./
 COPY --from=frontend-builder /build/frontend/dist ./frontend/dist
 
 # Create data directory for database
-RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
-VOLUME /app/data
-
-# Change ownership
-RUN chown -R appuser:appuser /app
-USER appuser
+RUN mkdir -p /app/data
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
