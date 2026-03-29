@@ -30,7 +30,9 @@ class SettingsRequest(BaseModel):
     tmdb_api_key: Optional[str] = None
     history_source: Optional[str] = None
     sonarr_quality_profile: Optional[str] = None
+    sonarr_monitored: Optional[str] = None
     radarr_quality_profile: Optional[str] = None
+    radarr_monitored: Optional[str] = None
     ai_history_depth: Optional[str] = None
     ai_max_titles: Optional[str] = None
     ai_num_recommendations: Optional[str] = None
@@ -71,7 +73,9 @@ def sanitize_settings(settings_dict: dict) -> dict:
         "tmdb_api_key": MASKED if settings.TMDB_API_KEY else None,
         "history_source": settings.HISTORY_SOURCE,
         "sonarr_quality_profile": str(settings.SONARR_QUALITY_PROFILE),
+        "sonarr_monitored": str(settings.SONARR_MONITORED).lower(),
         "radarr_quality_profile": str(settings.RADARR_QUALITY_PROFILE),
+        "radarr_monitored": str(settings.RADARR_MONITORED).lower(),
         "ai_history_depth": str(settings.AI_HISTORY_DEPTH),
         "ai_max_titles": str(settings.AI_MAX_TITLES),
         "ai_num_recommendations": str(settings.AI_NUM_RECOMMENDATIONS),
@@ -124,8 +128,12 @@ async def update_settings(request: SettingsRequest):
         db.set_setting("history_source", request.history_source)
     if request.sonarr_quality_profile is not None:
         db.set_setting("sonarr_quality_profile", request.sonarr_quality_profile)
+    if request.sonarr_monitored is not None:
+        db.set_setting("sonarr_monitored", request.sonarr_monitored)
     if request.radarr_quality_profile is not None:
         db.set_setting("radarr_quality_profile", request.radarr_quality_profile)
+    if request.radarr_monitored is not None:
+        db.set_setting("radarr_monitored", request.radarr_monitored)
     if request.ai_history_depth is not None:
         db.set_setting("ai_history_depth", request.ai_history_depth)
     if request.ai_max_titles is not None:

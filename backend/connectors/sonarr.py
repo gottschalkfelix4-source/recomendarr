@@ -78,12 +78,16 @@ class SonarrConnector:
                 profiles = await self.get_quality_profiles()
                 quality_profile_id = profiles[0].get("id", 1) if profiles else 1
 
+        from config import settings as app_settings
+        monitored = app_settings.SONARR_MONITORED
+
         series_data = {
             "title": title,
             "tvdbId": tvdb_id,
             "qualityProfileId": quality_profile_id,
             "rootFolderPath": root_folder,
             "seasonFolder": season_folder,
+            "monitored": monitored,
             "addOptions": {
                 "searchForMissingEpisodes": search_for_missing_episodes
             },

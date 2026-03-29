@@ -15,7 +15,9 @@ interface Settings {
   tmdbApiKey: string;
   historySource: string;
   sonarrQualityProfile: string;
+  sonarrMonitored: string;
   radarrQualityProfile: string;
+  radarrMonitored: string;
 }
 
 interface SettingsState {
@@ -41,7 +43,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     tmdbApiKey: '',
     historySource: 'tautulli',
     sonarrQualityProfile: '0',
+    sonarrMonitored: 'true',
     radarrQualityProfile: '0',
+    radarrMonitored: 'true',
   },
 
   loadSettings: async () => {
@@ -67,7 +71,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             tmdbApiKey: settingsData.tmdb_api_key || '',
             historySource: settingsData.history_source || 'tautulli',
             sonarrQualityProfile: settingsData.sonarr_quality_profile || '0',
+            sonarrMonitored: settingsData.sonarr_monitored || 'true',
             radarrQualityProfile: settingsData.radarr_quality_profile || '0',
+            radarrMonitored: settingsData.radarr_monitored || 'true',
           }
         });
       }
@@ -93,7 +99,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     if (settings.tmdbApiKey !== undefined) apiSettings.tmdb_api_key = settings.tmdbApiKey;
     if (settings.historySource !== undefined) apiSettings.history_source = settings.historySource;
     if (settings.sonarrQualityProfile !== undefined) apiSettings.sonarr_quality_profile = settings.sonarrQualityProfile;
+    if (settings.sonarrMonitored !== undefined) apiSettings.sonarr_monitored = settings.sonarrMonitored;
     if (settings.radarrQualityProfile !== undefined) apiSettings.radarr_quality_profile = settings.radarrQualityProfile;
+    if (settings.radarrMonitored !== undefined) apiSettings.radarr_monitored = settings.radarrMonitored;
 
     try {
       const response = await fetch('/api/settings/', {

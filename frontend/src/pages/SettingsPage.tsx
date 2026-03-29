@@ -21,7 +21,9 @@ interface SettingsFormState {
   tmdbApiKey: string;
   historySource: string;
   sonarrQualityProfile: string;
+  sonarrMonitored: string;
   radarrQualityProfile: string;
+  radarrMonitored: string;
 }
 
 interface QualityProfile {
@@ -146,7 +148,9 @@ export const SettingsPage = () => {
     tmdbApiKey: '',
     historySource: 'tautulli',
     sonarrQualityProfile: '0',
+    sonarrMonitored: 'true',
     radarrQualityProfile: '0',
+    radarrMonitored: 'true',
   });
 
   const [qualityProfiles, setQualityProfiles] = useState<{ sonarr: QualityProfile[]; radarr: QualityProfile[] }>({ sonarr: [], radarr: [] });
@@ -289,6 +293,27 @@ export const SettingsPage = () => {
                     </div>
                   )}
 
+                  {/* Monitored toggle for Sonarr */}
+                  {service.key === 'sonarr' && (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300">Monitored</label>
+                        <p className="text-xs text-gray-500">Automatically search for episodes</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleChange('sonarrMonitored', form.sonarrMonitored === 'true' ? 'false' : 'true')}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                          form.sonarrMonitored === 'true' ? 'bg-accent' : 'bg-surface-300'
+                        }`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                          form.sonarrMonitored === 'true' ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Quality Profile dropdown for Radarr */}
                   {service.key === 'radarr' && qualityProfiles.radarr.length > 0 && (
                     <div>
@@ -303,6 +328,27 @@ export const SettingsPage = () => {
                           <option key={p.id} value={String(p.id)}>{p.name}</option>
                         ))}
                       </select>
+                    </div>
+                  )}
+
+                  {/* Monitored toggle for Radarr */}
+                  {service.key === 'radarr' && (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300">Monitored</label>
+                        <p className="text-xs text-gray-500">Automatically search for movie</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleChange('radarrMonitored', form.radarrMonitored === 'true' ? 'false' : 'true')}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                          form.radarrMonitored === 'true' ? 'bg-accent' : 'bg-surface-300'
+                        }`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                          form.radarrMonitored === 'true' ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </button>
                     </div>
                   )}
                 </div>

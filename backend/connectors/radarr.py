@@ -77,6 +77,9 @@ class RadarrConnector:
                 profiles = await self.get_quality_profiles()
                 quality_profile_id = profiles[0].get("id", 1) if profiles else 1
 
+        from config import settings as app_settings
+        monitored = app_settings.RADARR_MONITORED
+
         movie_data = {
             "title": title,
             "tmdbId": tmdb_id,
@@ -85,7 +88,7 @@ class RadarrConnector:
             "addOptions": {
                 "searchForMovie": search_for_movie
             },
-            "monitored": True,
+            "monitored": monitored,
         }
 
         return await self._make_request("/movie", method="POST", data=movie_data)

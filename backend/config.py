@@ -165,6 +165,14 @@ class Settings:
             return 0  # 0 = auto-detect first
 
     @property
+    def SONARR_MONITORED(self) -> bool:
+        return self._get_setting("sonarr_monitored", "true") != "false"
+
+    @property
+    def RADARR_MONITORED(self) -> bool:
+        return self._get_setting("radarr_monitored", "true") != "false"
+
+    @property
     def RADARR_QUALITY_PROFILE(self) -> int:
         val = self._get_setting("radarr_quality_profile", "0")
         try:
