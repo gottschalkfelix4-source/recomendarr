@@ -17,6 +17,7 @@ class AutoRunSettingsRequest(BaseModel):
     max_movies: Optional[int] = None
     max_series: Optional[int] = None
     min_rating: Optional[float] = None
+    temperature: Optional[float] = None
     users: Optional[str] = None
 
 
@@ -35,6 +36,7 @@ async def autorun_settings():
         "max_movies": settings.AUTORUN_MAX_MOVIES,
         "max_series": settings.AUTORUN_MAX_SERIES,
         "min_rating": settings.AUTORUN_MIN_RATING,
+        "temperature": settings.AUTORUN_TEMPERATURE,
         "users": settings.AUTORUN_USERS,
     }
 
@@ -52,6 +54,8 @@ async def update_autorun_settings(request: AutoRunSettingsRequest):
         db.set_setting("autorun_max_series", str(max(0, request.max_series)))
     if request.min_rating is not None:
         db.set_setting("autorun_min_rating", str(max(0, min(10, request.min_rating))))
+    if request.temperature is not None:
+        db.set_setting("autorun_temperature", str(max(0, min(1.5, request.temperature))))
     if request.users is not None:
         db.set_setting("autorun_users", request.users)
 

@@ -286,7 +286,7 @@ async def run_autorun():
                 _log(f"  Sending to AI ({settings.AI_MODEL})... this may take a moment")
                 ai = AIConnector(
                     settings.AI_BASE_URL, settings.AI_API_KEY,
-                    settings.AI_MODEL, settings.AI_TEMPERATURE,
+                    settings.AI_MODEL, settings.AUTORUN_TEMPERATURE,
                 )
                 try:
                     result = await ai.analyze_watch_history(

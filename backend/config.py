@@ -153,6 +153,16 @@ class Settings:
             return 7.0
 
     @property
+    def AUTORUN_TEMPERATURE(self) -> float:
+        val = self._get_setting("autorun_temperature")
+        if val is not None:
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                pass
+        return self.AI_TEMPERATURE
+
+    @property
     def AUTORUN_USERS(self) -> str:
         return self._get_setting("autorun_users", "all") or "all"
 

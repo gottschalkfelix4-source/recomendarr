@@ -10,6 +10,7 @@ interface AutoRunSettings {
   max_movies: number;
   max_series: number;
   min_rating: number;
+  temperature: number;
   users: string;
 }
 
@@ -66,7 +67,7 @@ function formatDate(dateStr: string): string {
 export const SyncPage = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<AutoRunSettings>({
-    enabled: false, interval_hours: 24, max_movies: 5, max_series: 5, min_rating: 7.0, users: 'all',
+    enabled: false, interval_hours: 24, max_movies: 5, max_series: 5, min_rating: 7.0, temperature: 0.7, users: 'all',
   });
   const [status, setStatus] = useState<AutoRunStatus | null>(null);
   const [logs, setLogs] = useState<RunLog[]>([]);
@@ -289,7 +290,7 @@ export const SyncPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="Max Movies"
                   type="number"
@@ -318,6 +319,27 @@ export const SyncPage = () => {
                     <span className="text-sm font-mono text-amber-400 w-8 text-right">{settings.min_rating}</span>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">Only add if AI rates &ge; this</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Temperature (Creativity)</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range" min="0" max="1.5" step="0.1"
+                      value={settings.temperature}
+                      onChange={(e) => setSettings({ ...settings, temperature: parseFloat(e.target.value) })}
+                      className="flex-1 h-2 rounded-full appearance-none bg-surface-300 accent-accent cursor-pointer"
+                    />
+                    <span className="text-sm font-mono text-gray-300 w-8 text-right">{settings.temperature.toFixed(1)}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {settings.temperature <= 0.3
+                      ? 'Conservative - safe, popular picks'
+                      : settings.temperature <= 0.7
+                      ? 'Balanced - good mix of popular and niche'
+                      : settings.temperature <= 1.0
+                      ? 'Creative - more diverse, unexpected picks'
+                      : 'Experimental - very creative, might be hit or miss'}
+                  </p>
                 </div>
               </div>
             </CardContent>
