@@ -282,74 +282,108 @@ async def run_autorun():
                     continue
                 _log(f"  Found {len(history)} history entries")
 
-                # Generate recommendations
-                _log(f"  Sending to AI ({settings.AI_MODEL})... this may take a moment")
-                ai = AIConnector(
-                    settings.AI_BASE_URL, settings.AI_API_KEY,
-                    settings.AI_MODEL, settings.AUTORUN_TEMPERATURE,
-                )
-                try:
-                    result = await ai.analyze_watch_history(
-                        history,
-                        num_movies=max_movies + 3,
-                        num_series=max_series + 3,
-                        max_titles=settings.AI_MAX_TITLES,
-                        custom_prompt=settings.AI_CUSTOM_PROMPT,
-                    )
-                finally:
-                    await ai.close()
-
-                recs = result.get("recommendations", [])
-                _log(f"  AI returned {len(recs)} recommendations")
-
-                # Filter by min rating
-                before_filter = len(recs)
-                recs = [r for r in recs if r.get("rating", 0) >= min_rating]
-                if len(recs) < before_filter:
-                    _log(f"  Filtered to {len(recs)} (dropped {before_filter - len(recs)} below {min_rating} rating)")
-
-                # Log what AI recommended
-                for r in recs:
-                    _log(f"  >> {r.get('title')} ({r.get('media_type')}) — rating {r.get('rating', '?')}")
-
                 movies_added_this_user = 0
                 series_added_this_user = 0
+                tried_titles: list[str] = []  # all titles already tried (added, skipped, failed)
+                max_rounds = 4  # prevent infinite loops
 
-                for rec in recs:
-                    title = rec.get("title", "")
-                    media_type = rec.get("media_type", "")
+                for round_num in range(1, max_rounds + 1):
+                    movies_still_needed = max_movies - movies_added_this_user
+                    series_still_needed = max_series - series_added_this_user
 
-                    if media_type == "movie" and movies_added_this_user < max_movies:
-                        _log(f"  Adding movie to Radarr: {title}")
-                        result = await _add_to_radarr(title)
-                        if result.get("success"):
-                            movies_added_this_user += 1
-                            total_movies_added += 1
-                            user_detail["added"].append(f"Movie: {title}")
-                            _log(f"    + Added to Radarr")
-                        elif result.get("skipped"):
-                            total_movies_skipped += 1
-                            user_detail["skipped"].append(f"Movie: {title}")
-                            _log(f"    ~ Already in Radarr — skipped")
-                        else:
-                            user_detail["errors"].append(f"Movie '{title}': {result.get('message')}")
-                            _log(f"    ! Failed: {result.get('message')}", "error")
+                    if movies_still_needed <= 0 and series_still_needed <= 0:
+                        break  # target reached
 
-                    elif media_type == "series" and series_added_this_user < max_series:
-                        _log(f"  Adding series to Sonarr: {title}")
-                        result = await _add_to_sonarr(title)
-                        if result.get("success"):
-                            series_added_this_user += 1
-                            total_series_added += 1
-                            user_detail["added"].append(f"Series: {title}")
-                            _log(f"    + Added to Sonarr")
-                        elif result.get("skipped"):
-                            total_series_skipped += 1
-                            user_detail["skipped"].append(f"Series: {title}")
-                            _log(f"    ~ Already in Sonarr — skipped")
-                        else:
-                            user_detail["errors"].append(f"Series '{title}': {result.get('message')}")
-                            _log(f"    ! Failed: {result.get('message')}", "error")
+                    if round_num > 1:
+                        _log(f"  Round {round_num}: still need {movies_still_needed} movies, {series_still_needed} series — asking AI for more...")
+
+                    # Ask for extras to account for filtering/skips
+                    request_movies = max(movies_still_needed + 3, 0) if movies_still_needed > 0 else 0
+                    request_series = max(series_still_needed + 3, 0) if series_still_needed > 0 else 0
+
+                    if request_movies == 0 and request_series == 0:
+                        break
+
+                    # Generate recommendations
+                    if round_num == 1:
+                        _log(f"  Sending to AI ({settings.AI_MODEL})... this may take a moment")
+                    ai = AIConnector(
+                        settings.AI_BASE_URL, settings.AI_API_KEY,
+                        settings.AI_MODEL, settings.AUTORUN_TEMPERATURE,
+                    )
+                    try:
+                        result = await ai.analyze_watch_history(
+                            history,
+                            num_movies=request_movies,
+                            num_series=request_series,
+                            max_titles=settings.AI_MAX_TITLES,
+                            custom_prompt=settings.AI_CUSTOM_PROMPT,
+                            exclude_titles=tried_titles if tried_titles else None,
+                        )
+                    finally:
+                        await ai.close()
+
+                    recs = result.get("recommendations", [])
+                    _log(f"  AI returned {len(recs)} recommendations")
+
+                    # Filter by min rating
+                    before_filter = len(recs)
+                    recs = [r for r in recs if r.get("rating", 0) >= min_rating]
+                    if len(recs) < before_filter:
+                        _log(f"  Filtered to {len(recs)} (dropped {before_filter - len(recs)} below {min_rating} rating)")
+
+                    # Filter out titles we already tried (AI might repeat despite instructions)
+                    tried_lower = {t.lower() for t in tried_titles}
+                    recs = [r for r in recs if r.get("title", "").lower() not in tried_lower]
+
+                    if not recs:
+                        _log(f"  No new recommendations from AI — stopping retries")
+                        break
+
+                    # Log what AI recommended
+                    for r in recs:
+                        _log(f"  >> {r.get('title')} ({r.get('media_type')}) — rating {r.get('rating', '?')}")
+
+                    added_this_round = 0
+
+                    for rec in recs:
+                        title = rec.get("title", "")
+                        media_type = rec.get("media_type", "")
+                        tried_titles.append(title)
+
+                        if media_type == "movie" and movies_added_this_user < max_movies:
+                            _log(f"  Adding movie to Radarr: {title}")
+                            result = await _add_to_radarr(title)
+                            if result.get("success"):
+                                movies_added_this_user += 1
+                                total_movies_added += 1
+                                added_this_round += 1
+                                user_detail["added"].append(f"Movie: {title}")
+                                _log(f"    + Added to Radarr")
+                            elif result.get("skipped"):
+                                total_movies_skipped += 1
+                                user_detail["skipped"].append(f"Movie: {title}")
+                                _log(f"    ~ Already in Radarr — skipped")
+                            else:
+                                user_detail["errors"].append(f"Movie '{title}': {result.get('message')}")
+                                _log(f"    ! Failed: {result.get('message')}", "error")
+
+                        elif media_type == "series" and series_added_this_user < max_series:
+                            _log(f"  Adding series to Sonarr: {title}")
+                            result = await _add_to_sonarr(title)
+                            if result.get("success"):
+                                series_added_this_user += 1
+                                total_series_added += 1
+                                added_this_round += 1
+                                user_detail["added"].append(f"Series: {title}")
+                                _log(f"    + Added to Sonarr")
+                            elif result.get("skipped"):
+                                total_series_skipped += 1
+                                user_detail["skipped"].append(f"Series: {title}")
+                                _log(f"    ~ Already in Sonarr — skipped")
+                            else:
+                                user_detail["errors"].append(f"Series '{title}': {result.get('message')}")
+                                _log(f"    ! Failed: {result.get('message')}", "error")
 
                 _log(f"  Done with {user}: +{movies_added_this_user} movies, +{series_added_this_user} series")
 

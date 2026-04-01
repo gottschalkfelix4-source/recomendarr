@@ -58,9 +58,19 @@ class AIConnector:
         num_series: int = 10,
         max_titles: int = 30,
         custom_prompt: str = "",
+        exclude_titles: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Analyze watch history and generate recommendations."""
         history_str = self._format_history_for_ai(watch_history, max_titles=max_titles)
+
+        exclude_block = ""
+        if exclude_titles:
+            titles_list = "\n".join(f"- {t}" for t in exclude_titles)
+            exclude_block = f"""
+IMPORTANT: The following titles have ALREADY been suggested or are already in the library.
+Do NOT recommend any of these titles again. Suggest completely different titles instead:
+{titles_list}
+"""
 
         system_prompt = f"""You are a media recommendation expert. Your task is to analyze
 a user's watch history and suggest new TV series and movies they would enjoy.
@@ -84,7 +94,7 @@ That is {num_movies + num_series} recommendations total.
 IMPORTANT DIVERSITY RULE: Maximum 2 titles per genre. For example, at most 2 anime movies, at most 2 sci-fi series, etc.
 Spread your recommendations across many different genres to ensure variety.
 Do NOT recommend titles the user has already watched.
-{f"Additional instructions: {custom_prompt}" if custom_prompt else ""}"""
+{exclude_block}{f"Additional instructions: {custom_prompt}" if custom_prompt else ""}"""
 
         user_prompt = f"""Here is the user's watch history:
 
